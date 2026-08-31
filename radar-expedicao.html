@@ -1,0 +1,1095 @@
+<title>Radar de Expedição</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --surface-2: #f3f2ee;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --accent: #2a78d6;
+    --accent-wash: #e8f0fb;
+    --good: #0ca30c;
+    --warning: #fab219;
+    --serious: #ec835a;
+    --critical: #d03b3b;
+    --success-text: #006300;
+    --shadow: 0 1px 2px rgba(11,11,11,0.06), 0 4px 16px rgba(11,11,11,0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --surface-2: #212120;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255,255,255,0.10);
+      --accent: #3987e5;
+      --accent-wash: #17263a;
+      --good: #0ca30c;
+      --warning: #fab219;
+      --serious: #ec835a;
+      --critical: #e66767;
+      --success-text: #0ca30c;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #212120;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --accent: #3987e5;
+    --accent-wash: #17263a;
+    --good: #0ca30c;
+    --warning: #fab219;
+    --serious: #ec835a;
+    --critical: #e66767;
+    --success-text: #0ca30c;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  .app { max-width: 1180px; margin: 0 auto; padding: 0 20px 64px; }
+
+  /* ---------- header ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--page) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .top-inner {
+    max-width: 1180px; margin: 0 auto; padding: 14px 20px 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: 9px; background: var(--accent);
+    display: flex; align-items: center; justify-content: center; font-size: 17px; flex: none;
+  }
+  .brand-text h1 { font-size: 15px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  .brand-text p { font-size: 11.5px; color: var(--text-muted); margin: 1px 0 0; }
+  .conn { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-muted); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); flex: none; }
+  .dot.ok { background: var(--good); }
+  .dot.bad { background: var(--critical); }
+
+  nav.tabs { display: flex; gap: 4px; margin-top: 14px; }
+  nav.tabs button {
+    appearance: none; border: none; background: none; cursor: pointer;
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--text-muted);
+    padding: 9px 4px 11px; border-bottom: 2px solid transparent; margin-right: 18px;
+  }
+  nav.tabs button.active { color: var(--text-primary); border-bottom-color: var(--accent); }
+  nav.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  main { padding-top: 22px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ---------- primitives ---------- */
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px; box-shadow: var(--shadow);
+  }
+  .card + .card { margin-top: 16px; }
+  .grid { display: grid; gap: 16px; }
+  .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 28px 0 10px; }
+  .section-title:first-child { margin-top: 0; }
+  h2.card-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+  p.card-sub { font-size: 12.5px; color: var(--text-muted); margin: 0 0 16px; }
+
+  label.field { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
+  .field-row { display: grid; gap: 12px; margin-bottom: 14px; }
+  input, select, textarea {
+    width: 100%; font: inherit; font-size: 14px; color: var(--text-primary);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px;
+    padding: 9px 11px; appearance: none;
+  }
+  textarea { resize: vertical; min-height: 56px; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input[type="number"] { font-variant-numeric: tabular-nums; }
+
+  button.btn {
+    appearance: none; border: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 13.5px;
+    padding: 10px 18px; border-radius: 9px; background: var(--accent); color: #fff;
+  }
+  button.btn:hover { filter: brightness(1.06); }
+  button.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.btn.ghost { background: var(--surface-2); color: var(--text-primary); border: 1px solid var(--border); }
+  button.btn.small { padding: 6px 12px; font-size: 12.5px; }
+  button.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(12px);
+    background: var(--text-primary); color: var(--page); font-size: 13px; font-weight: 600;
+    padding: 10px 18px; border-radius: 999px; box-shadow: var(--shadow); opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s; z-index: 50;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .empty { text-align: center; padding: 34px 16px; color: var(--text-muted); font-size: 13px; }
+  .empty .big { font-size: 26px; display: block; margin-bottom: 6px; }
+
+  /* ---------- lancamento sub-tabs ---------- */
+  .subtabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; }
+  .subtabs button {
+    flex: none; appearance: none; border: 1px solid var(--border); background: var(--surface); cursor: pointer;
+    font: inherit; font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
+    padding: 8px 13px; border-radius: 999px;
+  }
+  .subtabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* ---------- pills / badges ---------- */
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700;
+    padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .pill.good { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--success-text); }
+  .pill.warning { background: color-mix(in srgb, var(--warning) 22%, transparent); color: #7a5200; }
+  :root:not([data-theme="light"]) .pill.warning { color: var(--warning); }
+  :root[data-theme="dark"] .pill.warning { color: var(--warning); }
+  .pill.critical { background: color-mix(in srgb, var(--critical) 16%, transparent); color: var(--critical); }
+  .pill.neutral { background: var(--surface-2); color: var(--text-muted); }
+
+  /* ---------- tables ---------- */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 9px 10px; white-space: nowrap; }
+  th { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); border-bottom: 1px solid var(--grid); font-weight: 700; }
+  td { border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; }
+  tr.rank-1 td:first-child::before { content: "🥇 "; }
+  tr.rank-2 td:first-child::before { content: "🥈 "; }
+  tr.rank-3 td:first-child::before { content: "🥉 "; }
+
+  /* ---------- stat tiles ---------- */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 12px; }
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 15px; box-shadow: var(--shadow); }
+  .tile .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+  .tile .value { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .tile .value small { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+
+  /* ---------- range switch ---------- */
+  .range-switch { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 3px; gap: 2px; }
+  .range-switch button {
+    appearance: none; border: none; background: none; cursor: pointer; font: inherit; font-size: 12px; font-weight: 600;
+    color: var(--text-muted); padding: 6px 11px; border-radius: 7px;
+  }
+  .range-switch button.active { background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow); }
+  .dash-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .dash-head h2 { font-size: 19px; margin: 0; }
+
+  /* ---------- charts ---------- */
+  .chart-card .chart-title { font-size: 13px; font-weight: 700; margin: 0 0 2px; }
+  .chart-card .chart-sub { font-size: 11.5px; color: var(--text-muted); margin: 0 0 14px; }
+  .hbar-row { display: grid; grid-template-columns: 128px 1fr 52px; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .hbar-row:last-child { margin-bottom: 0; }
+  .hbar-label { font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hbar-track { position: relative; height: 16px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+  .hbar-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; transition: width .5s ease; }
+  .hbar-val { font-size: 12px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; font-size: 11.5px; color: var(--text-muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+  .two-col { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 860px) { .two-col { grid-template-columns: 1fr; } }
+  .field-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .field-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 620px) { .field-row.cols-2, .field-row.cols-3 { grid-template-columns: 1fr; } }
+
+  #tooltip {
+    position: fixed; pointer-events: none; z-index: 60; background: var(--text-primary); color: var(--page);
+    font-size: 11.5px; font-weight: 600; padding: 6px 10px; border-radius: 7px; box-shadow: var(--shadow);
+    opacity: 0; transform: translate(-50%, -110%); transition: opacity .1s; white-space: nowrap;
+  }
+  #tooltip.show { opacity: 1; }
+
+  footer.note { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--text-muted); line-height: 1.6; }
+</style>
+
+<div id="tooltip"></div>
+<div class="toast" id="toast"></div>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="brand-mark">📦</div>
+      <div class="brand-text">
+        <h1>Radar de Expedição</h1>
+        <p>Produtividade, qualidade e pós-venda em um só lugar</p>
+      </div>
+    </div>
+    <div class="conn"><span class="dot" id="connDot"></span><span id="connText">Conectando…</span></div>
+  </div>
+  <div class="top-inner" style="padding-top:0;">
+    <nav class="tabs" id="mainTabs">
+      <button data-tab="lancamento" class="active">Lançamento</button>
+      <button data-tab="dashboard">Dashboard</button>
+    </nav>
+  </div>
+</header>
+
+<div class="app">
+  <main>
+    <section class="view active" id="view-lancamento"></section>
+    <section class="view" id="view-dashboard"></section>
+  </main>
+  <footer class="note">
+    Radar de Expedição salva os lançamentos num banco compartilhado do artifact — todo mundo com acesso à página vê e lança dados em tempo real.
+    Para manter a base saudável a longo prazo, evite recriar lançamentos duplicados (edite o lançamento do dia em vez de lançar de novo) e, periodicamente, exporte ou arquive períodos muito antigos.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================== constantes ============================== */
+  const FAIXAS = Array.from({length:12}, (_,i)=>{const h=7+i; return String(h).padStart(2,"0")+"h-"+String(h+1).padStart(2,"0")+"h";});
+  const TURNOS = ["Manhã","Tarde","Noite","Integral"];
+  const MARKETPLACES = ["Mercado Livre","Shopee","Amazon","Magalu","Americanas","Site Próprio","Outro"];
+  const TIPOS_ERRO = ["Item errado","Quantidade errada","Item faltante","Pedido trocado","Embalagem incorreta","Etiqueta trocada","Outro"];
+  const TRANSPORTADORAS = ["Correios","Jadlog","Loggi","Total Express","Azul Cargo","Transportadora própria","Outra"];
+  const STATUS_ENTREGA = [
+    {v:"Entregue no prazo", role:"good"},
+    {v:"Entregue com atraso", role:"warning"},
+    {v:"Em trânsito", role:"neutral"},
+    {v:"Insucesso na entrega", role:"warning"},
+    {v:"Extraviado", role:"critical"},
+    {v:"Avariado", role:"critical"},
+    {v:"Devolvido ao remetente", role:"warning"},
+  ];
+  const MOTIVOS_DEVOLUCAO = ["Arrependimento","Item errado","Produto com defeito","Não entregue / Extraviado","Atraso excessivo","Produto avariado","Divergência de anúncio","Outro"];
+  const RESPONSAVEIS_DEV = ["Erro interno (separação)","Erro interno (cadastro/anúncio)","Transportadora","Cliente","Marketplace"];
+  const TIPO_CHAMADO = ["Dúvida pré-venda","Status do pedido","Reclamação","Solicitação de troca","Solicitação de cancelamento","Elogio","Problema com produto","Outro"];
+  const RESULTADO_SAC = ["Positivo","Negativo","Neutro"];
+  const FETCH_WINDOW_DAYS = 90;
+  const RANGE_OPTIONS = [{k:"1",label:"Hoje"},{k:"7",label:"7 dias"},{k:"30",label:"30 dias"},{k:"90",label:"90 dias"}];
+
+  /* ============================== utilitários ============================== */
+  function pad2(n){ return String(n).padStart(2,"0"); }
+  function isoDate(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+  function todayISO(){ return isoDate(new Date()); }
+  function daysAgoISO(n){ const d=new Date(); d.setDate(d.getDate()-n); return isoDate(d); }
+  function fmtDateBR(iso){ if(!iso) return "—"; const [y,m,d]=iso.split("-"); return d+"/"+m+"/"+y; }
+  function fmtDateTimeBR(iso){ if(!iso) return "—"; const d=new Date(iso); if(isNaN(d)) return "—";
+    return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+  function slugify(s){ return (s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"") || "op"; }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function fmt1(n){ return (Math.round(n*10)/10).toLocaleString("pt-BR",{minimumFractionDigits: (Math.round(n*10)%10?1:0)}); }
+  function fmtPct(n){ return (Math.round(n*1000)/10).toLocaleString("pt-BR")+"%"; }
+  function byId(id){ return document.getElementById(id); }
+  function statusRole(v){ const f=STATUS_ENTREGA.find(s=>s.v===v); return f?f.role:"neutral"; }
+  function statusColorVar(v){
+    const role = statusRole(v);
+    const map = {good:"var(--good)", warning:"var(--warning)", critical:"var(--critical)", neutral:"var(--axis)"};
+    return map[role] || "var(--axis)";
+  }
+
+  let toastTimer=null;
+  function toast(msg){
+    const t=byId("toast"); t.textContent=msg; t.classList.add("show");
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"), 2400);
+  }
+
+  /* ============================== estado ============================== */
+  const state = {
+    tab: "lancamento",
+    subtab: "separacao",
+    range: "30",
+    operadores: [],
+    metas: {},
+    separacao: [],
+    erros: [],
+    entregas: [],
+    devolucoes: [],
+    sac: [],
+    ready: { operadores:false, separacao:false, erros:false, entregas:false, devolucoes:false, sac:false },
+  };
+
+  let db = null;
+  let renderQueued = false;
+  function scheduleRender(){
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(()=>{ renderQueued=false; renderAll(); });
+  }
+
+  /* ============================== conexão db ============================== */
+  async function boot(){
+    try {
+      if (typeof claude === "undefined" || !claude.use) throw new Error("no-claude");
+      db = await claude.use("db");
+    } catch(e){ db = null; }
+    const dot=byId("connDot"), txt=byId("connText");
+    if (!db){
+      dot.className="dot bad"; txt.textContent="Sem conexão com o banco — recarregue a página";
+      renderAll();
+      return;
+    }
+    dot.className="dot ok"; txt.textContent="Conectado";
+    subscribeAll();
+  }
+
+  function subscribeAll(){
+    const cutoffDay = daysAgoISO(FETCH_WINDOW_DAYS);
+    const cutoffIso = new Date(Date.now()-FETCH_WINDOW_DAYS*86400000).toISOString();
+
+    db.doc("config/lists").onSnapshot(snap=>{
+      const data = snap.exists ? snap.data() : {};
+      state.operadores = Array.isArray(data.operadores) ? data.operadores : [];
+      state.ready.operadores = true;
+      scheduleRender();
+    }, ()=>{ state.ready.operadores=true; scheduleRender(); });
+
+    db.doc("config/metas").onSnapshot(snap=>{
+      state.metas = snap.exists ? (snap.data()||{}) : {};
+      scheduleRender();
+    }, ()=>{});
+
+    db.collection("separacao").where("data",">=",cutoffDay).onSnapshot(qs=>{
+      state.separacao = qs.docs.map(d=>({id:d.id, ...d.data()}));
+      state.ready.separacao=true; scheduleRender();
+    }, ()=>{ state.ready.separacao=true; scheduleRender(); });
+
+    db.collection("erros").where("data",">=",cutoffDay).onSnapshot(qs=>{
+      state.erros = qs.docs.map(d=>({id:d.id, ...d.data()}));
+      state.ready.erros=true; scheduleRender();
+    }, ()=>{ state.ready.erros=true; scheduleRender(); });
+
+    db.collection("entregas").where("data",">=",cutoffDay).onSnapshot(qs=>{
+      state.entregas = qs.docs.map(d=>({id:d.id, ...d.data()}));
+      state.ready.entregas=true; scheduleRender();
+    }, ()=>{ state.ready.entregas=true; scheduleRender(); });
+
+    db.collection("devolucoes").where("data",">=",cutoffDay).onSnapshot(qs=>{
+      state.devolucoes = qs.docs.map(d=>({id:d.id, ...d.data()}));
+      state.ready.devolucoes=true; scheduleRender();
+    }, ()=>{ state.ready.devolucoes=true; scheduleRender(); });
+
+    db.collection("sac").where("dataAbertura",">=",cutoffIso).onSnapshot(qs=>{
+      state.sac = qs.docs.map(d=>({id:d.id, ...d.data()}));
+      state.ready.sac=true; scheduleRender();
+    }, ()=>{ state.ready.sac=true; scheduleRender(); });
+  }
+
+  /* ============================== escrita ============================== */
+  async function addOperador(nome){
+    nome = (nome||"").trim();
+    if (!nome) return;
+    if (state.operadores.some(o=>o.toLowerCase()===nome.toLowerCase())){ toast("Esse operador já está na lista."); return; }
+    const novaLista = state.operadores.concat([nome]);
+    await db.doc("config/lists").set({operadores: novaLista, updatedAt: new Date().toISOString()});
+    toast("Operador adicionado.");
+  }
+  async function removerOperador(nome){
+    const novaLista = state.operadores.filter(o=>o!==nome);
+    await db.doc("config/lists").set({operadores: novaLista, updatedAt: new Date().toISOString()});
+    toast("Operador removido da lista (lançamentos antigos são mantidos).");
+  }
+  async function setMetaManual(operador, valor){
+    const value = valor===""? null : Number(valor);
+    const ref = db.doc("config/metas");
+    const patch = {}; patch[operador] = value;
+    try {
+      await ref.update(patch);
+    } catch(e){
+      const snap = await ref.get();
+      const merged = Object.assign({}, snap.exists? snap.data():{}, patch);
+      await ref.set(merged);
+    }
+    toast("Meta atualizada.");
+  }
+
+  async function upsertSeparacao(data, operador, patch){
+    const id = data+"__"+slugify(operador);
+    const ref = db.collection("separacao").doc(id);
+    const snap = await ref.get();
+    const base = snap.exists ? snap.data() : {data, operador, turno:"", pedidos:0, itens:0, porHora:{}};
+    const body = Object.assign({}, base, patch, {data, operador, updatedAt:new Date().toISOString()});
+    await ref.set(body);
+  }
+  async function addHourly(data, operador, faixa, qtd){
+    const id = data+"__"+slugify(operador);
+    const ref = db.collection("separacao").doc(id);
+    const snap = await ref.get();
+    const base = snap.exists ? snap.data() : {data, operador, turno:"", pedidos:0, itens:0, porHora:{}};
+    const porHora = Object.assign({}, base.porHora||{});
+    porHora[faixa] = (porHora[faixa]||0) + qtd;
+    const body = Object.assign({}, base, {data, operador, porHora, updatedAt:new Date().toISOString()});
+    await ref.set(body);
+  }
+  async function addErro(doc){ await db.collection("erros").add(Object.assign({}, doc, {createdAt:new Date().toISOString()})); }
+  async function addEntrega(doc){ await db.collection("entregas").add(Object.assign({}, doc, {createdAt:new Date().toISOString()})); }
+  async function addDevolucao(doc){ await db.collection("devolucoes").add(Object.assign({}, doc, {createdAt:new Date().toISOString()})); }
+  async function addSac(doc){ await db.collection("sac").add(Object.assign({}, doc, {createdAt:new Date().toISOString()})); }
+  async function updateSac(id, patch){ await db.collection("sac").doc(id).update(patch); }
+
+  /* ============================== render raiz ============================== */
+  function renderAll(){
+    renderConn();
+    if (state.tab==="lancamento") renderLancamento(); else renderLancamento(true);
+    if (state.tab==="dashboard") renderDashboard(); else renderDashboard(true);
+    byId("view-lancamento").classList.toggle("active", state.tab==="lancamento");
+    byId("view-dashboard").classList.toggle("active", state.tab==="dashboard");
+  }
+  function renderConn(){
+    if (!db) return;
+    const dot=byId("connDot"), txt=byId("connText");
+    dot.className="dot ok"; txt.textContent="Conectado";
+  }
+
+  document.getElementById("mainTabs").addEventListener("click", e=>{
+    const b = e.target.closest("button[data-tab]"); if(!b) return;
+    state.tab = b.dataset.tab;
+    document.querySelectorAll("#mainTabs button").forEach(x=>x.classList.toggle("active", x===b));
+    renderAll();
+  });
+
+  /* ============================== LANÇAMENTO ============================== */
+  const SUBTABS = [
+    {k:"separacao", label:"Separação do dia"},
+    {k:"hora", label:"Ritmo por hora"},
+    {k:"erros", label:"Erro de separação"},
+    {k:"entregas", label:"Entrega / logística"},
+    {k:"devolucoes", label:"Devolução"},
+    {k:"sac", label:"Pós-venda"},
+    {k:"equipe", label:"Equipe e metas"},
+  ];
+
+  function opOptions(selected){
+    if (!state.operadores.length) return '<option value="">Nenhum operador cadastrado</option>';
+    return '<option value="">Selecione…</option>' + state.operadores.map(o=>
+      '<option value="'+esc(o)+'"'+(o===selected?" selected":"")+'>'+esc(o)+'</option>').join("");
+  }
+  function opts(list, selected){
+    return '<option value="">Selecione…</option>' + list.map(v=>
+      '<option value="'+esc(v)+'"'+(v===selected?" selected":"")+'>'+esc(v)+'</option>').join("");
+  }
+
+  function renderLancamento(skip){
+    if (skip) return;
+    const root = byId("view-lancamento");
+    if (!state.ready.operadores){
+      root.innerHTML = '<div class="empty"><span class="big">⏳</span>Carregando…</div>';
+      return;
+    }
+    const semOperadores = state.operadores.length===0;
+    const blocked = semOperadores && state.subtab!=="equipe";
+    root.innerHTML =
+      '<div class="subtabs" id="subtabs">' +
+        SUBTABS.map(s=>'<button data-sub="'+s.k+'" class="'+(state.subtab===s.k?"active":"")+'">'+s.label+'</button>').join("") +
+      '</div>' +
+      (blocked ?
+        '<div class="card"><div class="empty"><span class="big">🧑‍🤝‍🧑</span>Cadastre sua equipe antes de lançar dados.<br><br>' +
+        '<button class="btn" id="goEquipe">Ir para Equipe e metas</button></div></div>'
+        : subtabBody(state.subtab));
+
+    root.querySelector("#subtabs").addEventListener("click", e=>{
+      const b=e.target.closest("button[data-sub]"); if(!b) return;
+      state.subtab=b.dataset.sub; renderLancamento();
+    });
+    const ge = root.querySelector("#goEquipe");
+    if (ge) ge.addEventListener("click", ()=>{ state.subtab="equipe"; renderLancamento(); });
+
+    if (!blocked) wireSubtabForm(state.subtab, root);
+  }
+
+  function subtabBody(k){
+    const today = todayISO();
+    if (k==="separacao") return (
+      '<div class="card">' +
+        '<h2 class="card-title">Lançamento diário de separação</h2>' +
+        '<p class="card-sub">Um lançamento por operador, por dia. Lançar de novo no mesmo dia atualiza o valor (não duplica).</p>' +
+        '<form id="formSeparacao">' +
+          '<div class="field-row cols-2">' +
+            '<div><label class="field">Data</label><input type="date" name="data" value="'+today+'" required></div>' +
+            '<div><label class="field">Operador</label><select name="operador" required>'+opOptions()+'</select></div>' +
+          '</div>' +
+          '<div class="field-row cols-3">' +
+            '<div><label class="field">Turno</label><select name="turno">'+opts(TURNOS)+'</select></div>' +
+            '<div><label class="field">Pedidos separados</label><input type="number" min="0" name="pedidos" required></div>' +
+            '<div><label class="field">Itens separados</label><input type="number" min="0" name="itens"></div>' +
+          '</div>' +
+          '<div class="field-row"><div><label class="field">Observação</label><textarea name="obs"></textarea></div></div>' +
+          '<button class="btn" type="submit">Salvar lançamento do dia</button>' +
+        '</form>' +
+      '</div>');
+
+    if (k==="hora") return (
+      '<div class="card">' +
+        '<h2 class="card-title">Ritmo por hora (opcional)</h2>' +
+        '<p class="card-sub">Lançamentos rápidos que alimentam o gráfico "curva de produtividade por hora" do dashboard. Some ao total do dia — não precisa bater exatamente com o total.</p>' +
+        '<form id="formHora">' +
+          '<div class="field-row cols-3">' +
+            '<div><label class="field">Data</label><input type="date" name="data" value="'+today+'" required></div>' +
+            '<div><label class="field">Operador</label><select name="operador" required>'+opOptions()+'</select></div>' +
+            '<div><label class="field">Faixa horária</label><select name="faixa" required>'+opts(FAIXAS)+'</select></div>' +
+          '</div>' +
+          '<div class="field-row cols-2">' +
+            '<div><label class="field">Pedidos nessa faixa</label><input type="number" min="0" name="qtd" required></div>' +
+            '<div style="align-self:end;"><button class="btn" type="submit" style="width:100%;">Adicionar</button></div>' +
+          '</div>' +
+        '</form>' +
+      '</div>');
+
+    if (k==="erros") return (
+      '<div class="card">' +
+        '<h2 class="card-title">Erro de separação</h2>' +
+        '<p class="card-sub">Um registro por erro identificado (na conferência, na devolução ou reportado pelo cliente).</p>' +
+        '<form id="formErro">' +
+          '<div class="field-row cols-3">' +
+            '<div><label class="field">Data</label><input type="date" name="data" value="'+today+'" required></div>' +
+            '<div><label class="field">Operador</label><select name="operador" required>'+opOptions()+'</select></div>' +
+            '<div><label class="field">Pedido</label><input type="text" name="pedido" placeholder="Nº do pedido"></div>' +
+          '</div>' +
+          '<div class="field-row"><div><label class="field">Tipo de erro</label><select name="tipo" required>'+opts(TIPOS_ERRO)+'</select></div></div>' +
+          '<div class="field-row"><div><label class="field">Observação</label><textarea name="obs"></textarea></div></div>' +
+          '<button class="btn" type="submit">Registrar erro</button>' +
+        '</form>' +
+      '</div>');
+
+    if (k==="entregas") return (
+      '<div class="card">' +
+        '<h2 class="card-title">Entrega / problema logístico</h2>' +
+        '<p class="card-sub">Registre atrasos, extravios, avarias e insucessos de entrega — a data prevista ajuda a calcular o atraso.</p>' +
+        '<form id="formEntrega">' +
+          '<div class="field-row cols-3">' +
+            '<div><label class="field">Pedido</label><input type="text" name="pedido"></div>' +
+            '<div><label class="field">Marketplace</label><select name="marketplace" required>'+opts(MARKETPLACES)+'</select></div>' +
+            '<div><label class="field">Transportadora</label><select name="transportadora">'+opts(TRANSPORTADORAS)+'</select></div>' +
+          '</div>' +
+          '<div class="field-row cols-3">' +
+            '<div><label class="field">Status</label><select name="status" required>'+opts(STATUS_ENTREGA.map(s=>s.v))+'</select></div>' +
+            '<div><label class="field">Data prevista</label><input type="date" name="dataPrevista" value="'+today+'" required></div>' +
+            '<div><label class="field">Data real da entrega</label><input type="date" name="dataReal"></div>' +
+          '</div>' +
+          '<div class="field-row"><div><label class="field">Observação</label><textarea name="obs"></textarea></div></div>' +
+          '<button class="btn" type="submit">Registrar</button>' +
+        '</form>' +
+      '</div>');
+
+    if (k==="devolucoes") return (
+      '<div class="card">' +
+        '<h2 class="card-title">Devolução</h2>' +
+        '<form id="formDevolucao">' +
+          '<div class="field-row cols-3">' +
+            '<div><label class="field">Data</label><input type="date" name="data" value="'+today+'" required></div>' +
+            '<div><label class="field">Pedido</label><input type="text" name="pedido"></div>' +
+            '<div><label class="field">Marketplace</label><select name="marketplace" required>'+opts(MARKETPLACES)+'</select></div>' +
+          '</div>' +
+          '<div class="field-row cols-2">' +
+            '<div><label class="field">Motivo</label><select name="motivo" required>'+opts(MOTIVOS_DEVOLUCAO)+'</select></div>' +
+            '<div><label class="field">Responsável</label><select name="responsavel">'+opts(RESPONSAVEIS_DEV)+'</select></div>' +
+          '</div>' +
+          '<div class="field-row cols-2">' +
+            '<div><label class="field">Valor do pedido (R$)</label><input type="number" min="0" step="0.01" name="valor"></div>' +
+            '<div><label class="field">Observação</label><input type="text" name="obs"></div>' +
+          '</div>' +
+          '<button class="btn" type="submit">Registrar devolução</button>' +
+        '</form>' +
+      '</div>');
+
+    if (k==="sac") return (
+      '<div class="card">' +
+        '<h2 class="card-title">Novo chamado de pós-venda</h2>' +
+        '<form id="formSac">' +
+          '<div class="field-row cols-3">' +
+            '<div><label class="field">Marketplace</label><select name="marketplace" required>'+opts(MARKETPLACES)+'</select></div>' +
+            '<div><label class="field">Pedido</label><input type="text" name="pedido"></div>' +
+            '<div><label class="field">Tipo de chamado</label><select name="tipo" required>'+opts(TIPO_CHAMADO)+'</select></div>' +
+          '</div>' +
+          '<div class="field-row"><div><label class="field">Motivo (detalhe)</label><input type="text" name="motivo"></div></div>' +
+          '<div class="field-row"><div><label class="field">Observação</label><textarea name="obs"></textarea></div></div>' +
+          '<button class="btn" type="submit">Abrir chamado</button>' +
+        '</form>' +
+      '</div>' +
+      '<div class="card"><h2 class="card-title">Chamados em aberto</h2><p class="card-sub">Registre a 1ª resposta e, depois, a resolução — isso alimenta o tempo médio de atendimento.</p>' +
+        '<div id="abertosList"></div>' +
+      '</div>');
+
+    if (k==="equipe") return (
+      '<div class="card">' +
+        '<h2 class="card-title">Equipe</h2>' +
+        '<p class="card-sub">Operadores disponíveis nos formulários de lançamento.</p>' +
+        '<form id="formOperador" class="field-row cols-2" style="align-items:end;">' +
+          '<div><label class="field">Nome do operador</label><input type="text" name="nome" placeholder="Ex.: Ana Souza" required></div>' +
+          '<div><button class="btn" type="submit" style="width:100%;">Adicionar</button></div>' +
+        '</form>' +
+        '<div id="listaOperadores"></div>' +
+      '</div>' +
+      '<div class="card">' +
+        '<h2 class="card-title">Meta diária</h2>' +
+        '<p class="card-sub">Por padrão a meta é calculada automaticamente pela média histórica de cada operador. Defina um valor manual só se quiser travar um número fixo.</p>' +
+        '<div id="listaMetas"></div>' +
+      '</div>');
+
+    return "";
+  }
+
+  function wireSubtabForm(k, root){
+    if (k==="separacao"){
+      const f=root.querySelector("#formSeparacao");
+      if (f) f.addEventListener("submit", async e=>{
+        e.preventDefault(); const fd=new FormData(f);
+        await upsertSeparacao(fd.get("data"), fd.get("operador"), {
+          turno: fd.get("turno")||"", pedidos: Number(fd.get("pedidos"))||0, itens: Number(fd.get("itens"))||0,
+          obs: fd.get("obs")||"",
+        });
+        toast("Lançamento salvo."); f.reset(); f.querySelector('input[name="data"]').value=todayISO();
+      });
+    }
+    if (k==="hora"){
+      const f=root.querySelector("#formHora");
+      if (f) f.addEventListener("submit", async e=>{
+        e.preventDefault(); const fd=new FormData(f);
+        await addHourly(fd.get("data"), fd.get("operador"), fd.get("faixa"), Number(fd.get("qtd"))||0);
+        toast("Adicionado à curva do dia."); f.querySelector('[name="qtd"]').value="";
+      });
+    }
+    if (k==="erros"){
+      const f=root.querySelector("#formErro");
+      if (f) f.addEventListener("submit", async e=>{
+        e.preventDefault(); const fd=new FormData(f);
+        await addErro({data:fd.get("data"), operador:fd.get("operador"), pedido:fd.get("pedido")||"", tipo:fd.get("tipo"), obs:fd.get("obs")||""});
+        toast("Erro registrado."); f.reset(); f.querySelector('input[name="data"]').value=todayISO();
+      });
+    }
+    if (k==="entregas"){
+      const f=root.querySelector("#formEntrega");
+      if (f) f.addEventListener("submit", async e=>{
+        e.preventDefault(); const fd=new FormData(f);
+        await addEntrega({
+          pedido:fd.get("pedido")||"", marketplace:fd.get("marketplace"), transportadora:fd.get("transportadora")||"",
+          status:fd.get("status"), data:fd.get("dataPrevista"), dataPrevista:fd.get("dataPrevista"), dataReal:fd.get("dataReal")||"",
+          obs:fd.get("obs")||"",
+        });
+        toast("Entrega registrada."); f.reset(); f.querySelector('input[name="dataPrevista"]').value=todayISO();
+      });
+    }
+    if (k==="devolucoes"){
+      const f=root.querySelector("#formDevolucao");
+      if (f) f.addEventListener("submit", async e=>{
+        e.preventDefault(); const fd=new FormData(f);
+        await addDevolucao({
+          data:fd.get("data"), pedido:fd.get("pedido")||"", marketplace:fd.get("marketplace"), motivo:fd.get("motivo"),
+          responsavel:fd.get("responsavel")||"", valor:Number(fd.get("valor"))||0, obs:fd.get("obs")||"",
+        });
+        toast("Devolução registrada."); f.reset(); f.querySelector('input[name="data"]').value=todayISO();
+      });
+    }
+    if (k==="sac"){
+      const f=root.querySelector("#formSac");
+      if (f) f.addEventListener("submit", async e=>{
+        e.preventDefault(); const fd=new FormData(f);
+        await addSac({
+          dataAbertura:new Date().toISOString(), marketplace:fd.get("marketplace"), pedido:fd.get("pedido")||"",
+          tipo:fd.get("tipo"), motivo:fd.get("motivo")||"", obs:fd.get("obs")||"",
+          dataResposta:"", dataResolucao:"", resultado:"",
+        });
+        toast("Chamado aberto."); f.reset();
+      });
+      renderAbertos(root.querySelector("#abertosList"));
+    }
+    if (k==="equipe"){
+      const f=root.querySelector("#formOperador");
+      if (f) f.addEventListener("submit", async e=>{
+        e.preventDefault(); const fd=new FormData(f);
+        await addOperador(fd.get("nome")); f.reset();
+      });
+      renderListaOperadores(root.querySelector("#listaOperadores"));
+      renderListaMetas(root.querySelector("#listaMetas"));
+    }
+  }
+
+  function renderAbertos(container){
+    const abertos = state.sac.filter(s=>!s.dataResolucao).sort((a,b)=> (a.dataAbertura<b.dataAbertura?1:-1));
+    if (!abertos.length){ container.innerHTML='<div class="empty">Nenhum chamado em aberto 🎉</div>'; return; }
+    container.innerHTML = abertos.map(s=>{
+      const precisaResposta = !s.dataResposta;
+      return '<div class="card" style="margin-top:10px; padding:14px;">' +
+        '<div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">' +
+          '<div><strong>'+esc(s.marketplace)+'</strong> · '+esc(s.tipo)+(s.pedido?' · Pedido '+esc(s.pedido):'')+'<br>' +
+          '<span style="color:var(--text-muted); font-size:12px;">Aberto em '+fmtDateTimeBR(s.dataAbertura)+(s.motivo?' — '+esc(s.motivo):'')+'</span></div>' +
+          '<span class="pill '+(precisaResposta?"critical":"warning")+'">'+(precisaResposta?"Aguardando 1ª resposta":"Aguardando resolução")+'</span>' +
+        '</div>' +
+        '<form class="resolveForm" data-id="'+s.id+'" data-need-resp="'+(precisaResposta?"1":"0")+'" style="margin-top:10px;">' +
+          (precisaResposta ?
+            '<button class="btn small" type="submit" data-action="responder">Registrar 1ª resposta agora</button>' :
+            '<div class="field-row cols-2" style="margin-bottom:8px;">' +
+              '<div><label class="field">Resultado</label><select name="resultado" required>'+opts(RESULTADO_SAC)+'</select></div>' +
+              '<div style="align-self:end;"><button class="btn small" type="submit" data-action="resolver" style="width:100%;">Marcar como resolvido</button></div>' +
+            '</div>') +
+        '</form>' +
+      '</div>';
+    }).join("");
+    container.querySelectorAll(".resolveForm").forEach(f=>{
+      f.addEventListener("submit", async e=>{
+        e.preventDefault();
+        const id=f.dataset.id;
+        if (f.dataset.needResp==="1"){
+          await updateSac(id, {dataResposta:new Date().toISOString()});
+          toast("1ª resposta registrada.");
+        } else {
+          const fd=new FormData(f);
+          await updateSac(id, {dataResolucao:new Date().toISOString(), resultado:fd.get("resultado")});
+          toast("Chamado resolvido.");
+        }
+      });
+    });
+  }
+
+  function renderListaOperadores(container){
+    if (!state.operadores.length){ container.innerHTML='<div class="empty">Nenhum operador ainda.</div>'; return; }
+    container.innerHTML = '<div class="table-wrap"><table><thead><tr><th>Operador</th><th></th></tr></thead><tbody>' +
+      state.operadores.map(o=>'<tr><td>'+esc(o)+'</td><td class="num"><button class="btn ghost small" data-rm="'+esc(o)+'">Remover</button></td></tr>').join("") +
+      '</tbody></table></div>';
+    container.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click", ()=>{
+      if (confirm('Remover "'+b.dataset.rm+'" da lista de operadores? O histórico de lançamentos é mantido.')) removerOperador(b.dataset.rm);
+    }));
+  }
+  function renderListaMetas(container){
+    if (!state.operadores.length){ container.innerHTML='<div class="empty">Cadastre operadores primeiro.</div>'; return; }
+    const stats = computeOperatorStats("30");
+    container.innerHTML = '<div class="table-wrap"><table><thead><tr><th>Operador</th><th class="num">Média (30d)</th><th class="num">Meta manual</th></tr></thead><tbody>' +
+      state.operadores.map(o=>{
+        const st = stats.find(x=>x.operador===o);
+        const manual = state.metas[o];
+        return '<tr><td>'+esc(o)+'</td><td class="num">'+(st? fmt1(st.media):"—")+'</td>' +
+          '<td class="num"><input type="number" min="0" style="width:90px; display:inline-block;" data-meta="'+esc(o)+'" value="'+(manual!=null?manual:"")+'" placeholder="auto"></td></tr>';
+      }).join("") + '</tbody></table></div>';
+    container.querySelectorAll("[data-meta]").forEach(inp=>{
+      inp.addEventListener("change", ()=> setMetaManual(inp.dataset.meta, inp.value));
+    });
+  }
+
+  /* ============================== agregações ============================== */
+  function rangeCutoffDay(){ return daysAgoISO(Number(state.range)-1); }
+
+  function computeOperatorStats(rangeOverride){
+    const cutoff = rangeOverride!=null ? daysAgoISO(Number(rangeOverride)-1) : rangeCutoffDay();
+    const today = todayISO(); const yesterday = daysAgoISO(1);
+    return state.operadores.map(op=>{
+      const rows = state.separacao.filter(r=>r.operador===op && r.data>=cutoff);
+      const total = rows.reduce((s,r)=>s+(r.pedidos||0),0);
+      const media = rows.length ? total/rows.length : 0;
+      const hoje = rows.find(r=>r.data===today);
+      const ontem = rows.find(r=>r.data===yesterday);
+      const errosOp = state.erros.filter(e=>e.operador===op && e.data>=cutoff).length;
+      const metaManual = state.metas[op];
+      const meta = (metaManual!=null && metaManual>0) ? metaManual : Math.round(media);
+      return {
+        operador: op, pedidosHoje: hoje? hoje.pedidos:0, pedidosOntem: ontem? ontem.pedidos:0,
+        media, meta, dias: rows.length, total, erros: errosOp,
+        pctErro: total? errosOp/total : 0,
+      };
+    }).sort((a,b)=> b.media-a.media);
+  }
+
+  function computeSummary(){
+    const cutoff = rangeCutoffDay(); const today=todayISO();
+    const sepRange = state.separacao.filter(r=>r.data>=cutoff);
+    const pedidosHoje = state.separacao.filter(r=>r.data===today).reduce((s,r)=>s+(r.pedidos||0),0);
+    const pedidosPeriodo = sepRange.reduce((s,r)=>s+(r.pedidos||0),0);
+    const errosHoje = state.erros.filter(e=>e.data===today).length;
+    const errosPeriodo = state.erros.filter(e=>e.data>=cutoff).length;
+    const devPeriodo = state.devolucoes.filter(d=>d.data>=cutoff).length;
+    const cutoffIso = new Date(Date.now()-(Number(state.range))*86400000).toISOString();
+    const sacPeriodo = state.sac.filter(s=>s.dataAbertura>=cutoffIso);
+    const sacResolvidos = sacPeriodo.filter(s=>s.resultado);
+    const sacPositivos = sacResolvidos.filter(s=>s.resultado==="Positivo").length;
+    return {
+      pedidosHoje, pedidosPeriodo,
+      errosHoje, errosPeriodo, pctErroPeriodo: pedidosPeriodo? errosPeriodo/pedidosPeriodo:0,
+      devPeriodo, pctDevPeriodo: pedidosPeriodo? devPeriodo/pedidosPeriodo:0,
+      sacAbertos: sacPeriodo.length,
+      pctPositivo: sacResolvidos.length? sacPositivos/sacResolvidos.length:0,
+    };
+  }
+
+  function computeSeriesPorDia(){
+    const cutoff = rangeCutoffDay();
+    const days = []; const n=Number(state.range);
+    for (let i=n-1;i>=0;i--) days.push(daysAgoISO(i));
+    return days.map(d=>({
+      data: d,
+      total: state.separacao.filter(r=>r.data===d).reduce((s,r)=>s+(r.pedidos||0),0),
+    }));
+  }
+
+  function computeHourly(){
+    const cutoff = rangeCutoffDay();
+    const acc = {}; FAIXAS.forEach(f=>acc[f]=0);
+    let any=false;
+    state.separacao.filter(r=>r.data>=cutoff && r.porHora).forEach(r=>{
+      Object.keys(r.porHora).forEach(f=>{ if (acc.hasOwnProperty(f)){ acc[f]+= r.porHora[f]||0; any=true; } });
+    });
+    return {any, data: FAIXAS.map(f=>({label:f, value:acc[f]}))};
+  }
+
+  function computeBreakdown(list, field, dict){
+    const cutoff = rangeCutoffDay();
+    const acc = {};
+    list.filter(r=>r.data>=cutoff).forEach(r=>{ const k=r[field]||"—"; acc[k]=(acc[k]||0)+1; });
+    return Object.keys(acc).map(k=>({label:k, value:acc[k]})).sort((a,b)=>b.value-a.value);
+  }
+
+  function computeSacByMarketplace(){
+    const cutoffIso = new Date(Date.now()-(Number(state.range))*86400000).toISOString();
+    const rows = state.sac.filter(s=>s.dataAbertura>=cutoffIso);
+    return MARKETPLACES.map(mk=>{
+      const list = rows.filter(s=>s.marketplace===mk);
+      if (!list.length) return null;
+      const resolved = list.filter(s=>s.resultado);
+      const pos = resolved.filter(s=>s.resultado==="Positivo").length;
+      const neg = resolved.filter(s=>s.resultado==="Negativo").length;
+      const temposRes = list.filter(s=>s.dataResolucao).map(s=> (new Date(s.dataResolucao)-new Date(s.dataAbertura))/3600000);
+      const tempoMedio = temposRes.length ? temposRes.reduce((a,b)=>a+b,0)/temposRes.length : null;
+      return {marketplace:mk, chamados:list.length, pctPos: resolved.length? pos/resolved.length:null, pctNeg: resolved.length? neg/resolved.length:null, tempoMedio};
+    }).filter(Boolean);
+  }
+
+  /* ============================== charts (SVG) ============================== */
+  function hbar(container, items, opts){
+    opts = opts||{};
+    const max = Math.max(1, ...items.map(i=>i.value));
+    if (!items.length){ container.innerHTML = '<div class="empty">Sem dados no período.</div>'; return; }
+    container.innerHTML = items.map(it=>{
+      const pct = Math.max(2, Math.round((it.value/max)*100));
+      const color = opts.colorFn ? opts.colorFn(it) : "var(--accent)";
+      return '<div class="hbar-row">' +
+        '<div class="hbar-label" title="'+esc(it.label)+'">'+esc(it.label)+'</div>' +
+        '<div class="hbar-track"><div class="hbar-fill" style="width:'+pct+'%; background:'+color+';"></div></div>' +
+        '<div class="hbar-val">'+ (opts.fmt? opts.fmt(it.value) : it.value) +'</div>' +
+      '</div>';
+    }).join("");
+  }
+
+  function vbarHours(container, items){
+    const max = Math.max(1, ...items.map(i=>i.value));
+    const w=680, h=170, padL=6, padR=6, padB=22, padT=6;
+    const bw = (w-padL-padR)/items.length;
+    const any = items.some(i=>i.value>0);
+    if (!any){ container.innerHTML='<div class="empty">Sem lançamentos por hora no período — use "Ritmo por hora" no Lançamento.</div>'; return; }
+    let bars="", labels="";
+    items.forEach((it,i)=>{
+      const bh = Math.max(2, (h-padT-padB) * (it.value/max));
+      const x = padL + i*bw;
+      const y = h-padB-bh;
+      bars += '<rect x="'+(x+bw*0.15)+'" y="'+y+'" width="'+(bw*0.7)+'" height="'+bh+'" rx="3" fill="var(--accent)" data-v="'+it.value+'" data-l="'+esc(it.label)+'" class="bar"></rect>';
+      labels += '<text x="'+(x+bw/2)+'" y="'+(h-6)+'" text-anchor="middle" font-size="9" fill="var(--text-muted)">'+it.label.slice(0,2)+'h</text>';
+    });
+    container.innerHTML = '<svg viewBox="0 0 '+w+' '+h+'" style="width:100%; height:170px; overflow:visible;">' +
+      '<line x1="'+padL+'" y1="'+(h-padB)+'" x2="'+(w-padR)+'" y2="'+(h-padB)+'" stroke="var(--axis)" stroke-width="1"></line>' +
+      bars + labels + '</svg>';
+    wireBarTooltips(container);
+  }
+
+  function lineChart(container, series){
+    const w=1000, h=220, padL=34, padR=14, padT=16, padB=28;
+    if (!series.length || series.every(s=>s.total===0)){
+      container.innerHTML='<div class="empty">Sem lançamentos de separação no período selecionado.</div>'; return;
+    }
+    const max = Math.max(1, ...series.map(s=>s.total));
+    const n = series.length;
+    const x = i => padL + (n<=1?0:(i*(w-padL-padR)/(n-1)));
+    const y = v => padT + (h-padT-padB) * (1 - v/max);
+    const pts = series.map((s,i)=>[x(i), y(s.total)]);
+    const line = pts.map((p,i)=>(i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+    const area = line + " L"+pts[pts.length-1][0].toFixed(1)+","+(h-padB)+" L"+pts[0][0].toFixed(1)+","+(h-padB)+" Z";
+    const gridN=4; let grid="", gridLabels="";
+    for(let g=0; g<=gridN; g++){
+      const gv = max*g/gridN; const gy = y(gv);
+      grid += '<line x1="'+padL+'" y1="'+gy+'" x2="'+(w-padR)+'" y2="'+gy+'" stroke="var(--grid)" stroke-width="1"></line>';
+      gridLabels += '<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="9" fill="var(--text-muted)">'+Math.round(gv)+'</text>';
+    }
+    const step = Math.max(1, Math.round(n/6));
+    let xLabels="";
+    series.forEach((s,i)=>{ if (i%step===0 || i===n-1) xLabels += '<text x="'+x(i)+'" y="'+(h-8)+'" text-anchor="middle" font-size="9" fill="var(--text-muted)">'+s.data.slice(5)+'</text>'; });
+    const last = pts[pts.length-1];
+    container.innerHTML =
+      '<svg viewBox="0 0 '+w+' '+h+'" style="width:100%; height:220px;" id="lineSvg">' +
+        grid + gridLabels +
+        '<path d="'+area+'" fill="var(--accent)" opacity="0.12" stroke="none"></path>' +
+        '<path d="'+line+'" fill="none" stroke="var(--accent)" stroke-width="2"></path>' +
+        pts.map((p,i)=>'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(i===pts.length-1?4:0)+'" fill="var(--accent)"></circle>').join("") +
+        '<line id="crosshair" x1="0" y1="'+padT+'" x2="0" y2="'+(h-padB)+'" stroke="var(--axis)" stroke-width="1" opacity="0"></line>' +
+        '<rect id="hitArea" x="'+padL+'" y="0" width="'+(w-padL-padR)+'" height="'+h+'" fill="transparent"></rect>' +
+        xLabels +
+      '</svg>';
+    const svg = container.querySelector("#lineSvg");
+    const hit = container.querySelector("#hitArea");
+    const cross = container.querySelector("#crosshair");
+    const tip = byId("tooltip");
+    hit.addEventListener("mousemove", e=>{
+      const rect = svg.getBoundingClientRect();
+      const px = (e.clientX-rect.left) * (w/rect.width);
+      let idx = Math.round((px-padL) / ((w-padL-padR)/(Math.max(1,n-1))));
+      idx = Math.max(0, Math.min(n-1, idx));
+      const p = pts[idx];
+      cross.setAttribute("x1", p[0]); cross.setAttribute("x2", p[0]); cross.setAttribute("opacity","1");
+      tip.innerHTML = fmtDateBR(series[idx].data)+" — <b>"+series[idx].total+"</b> pedidos";
+      tip.style.left = e.clientX+"px"; tip.style.top = e.clientY+"px"; tip.classList.add("show");
+    });
+    hit.addEventListener("mouseleave", ()=>{ cross.setAttribute("opacity","0"); tip.classList.remove("show"); });
+  }
+
+  function wireBarTooltips(container){
+    const tip = byId("tooltip");
+    container.querySelectorAll(".bar").forEach(b=>{
+      b.addEventListener("mousemove", e=>{
+        tip.innerHTML = esc(b.dataset.l)+" — <b>"+b.dataset.v+"</b>";
+        tip.style.left=e.clientX+"px"; tip.style.top=e.clientY+"px"; tip.classList.add("show");
+      });
+      b.addEventListener("mouseleave", ()=> tip.classList.remove("show"));
+    });
+  }
+
+  /* ============================== DASHBOARD ============================== */
+  function renderDashboard(skip){
+    if (skip) return;
+    const root = byId("view-dashboard");
+    const allReady = Object.values(state.ready).every(Boolean);
+    if (!allReady){
+      root.innerHTML = '<div class="card"><div class="empty"><span class="big">⏳</span>Carregando dados…</div></div>';
+      return;
+    }
+    const s = computeSummary();
+    const opStats = computeOperatorStats();
+    const series = computeSeriesPorDia();
+    const hourly = computeHourly();
+    const errosBd = computeBreakdown(state.erros, "tipo");
+    const entregasBd = computeBreakdown(state.entregas, "status");
+    const devBd = computeBreakdown(state.devolucoes, "motivo");
+    const sacMk = computeSacByMarketplace();
+    const cutoffIso = new Date(Date.now()-(Number(state.range))*86400000).toISOString();
+    const sacRange = state.sac.filter(x=>x.dataAbertura>=cutoffIso);
+    const resolvidos = sacRange.filter(x=>x.dataResolucao);
+    const tempos1a = sacRange.filter(x=>x.dataResposta).map(x=>(new Date(x.dataResposta)-new Date(x.dataAbertura))/3600000);
+    const temposRes = resolvidos.map(x=>(new Date(x.dataResolucao)-new Date(x.dataAbertura))/3600000);
+    const tempoResp = tempos1a.length? tempos1a.reduce((a,b)=>a+b,0)/tempos1a.length : null;
+    const tempoRes = temposRes.length? temposRes.reduce((a,b)=>a+b,0)/temposRes.length : null;
+    const reclamacoes = sacRange.filter(x=>x.tipo==="Reclamação").length;
+    const negativos = resolvidos.filter(x=>x.resultado==="Negativo").length;
+    const pctNeg = resolvidos.length? negativos/resolvidos.length : 0;
+
+    root.innerHTML =
+      '<div class="dash-head"><h2>Dashboard</h2>' +
+        '<div class="range-switch" id="rangeSwitch">' + RANGE_OPTIONS.map(r=>
+          '<button data-r="'+r.k+'" class="'+(state.range===r.k?"active":"")+'">'+r.label+'</button>').join("") +
+        '</div></div>' +
+
+      '<div class="tiles">' +
+        tile("Pedidos hoje", s.pedidosHoje, "") +
+        tile("Pedidos no período", s.pedidosPeriodo, "") +
+        tile("Erros de separação", s.errosPeriodo, fmtPct(s.pctErroPeriodo)+" dos pedidos") +
+        tile("Devoluções", s.devPeriodo, fmtPct(s.pctDevPeriodo)+" dos pedidos") +
+        tile("Chamados de pós-venda", s.sacAbertos, "") +
+        tile("Pós-venda positivo", fmtPct(s.pctPositivo), "das avaliações concluídas") +
+      '</div>' +
+
+      '<div class="section-title">Produtividade da equipe</div>' +
+      '<div class="card">' +
+        '<h2 class="card-title">Ranking dos operadores</h2>' +
+        '<p class="card-sub">Ordenado pela média diária no período. Verde = na meta ou acima; vermelho = abaixo da meta.</p>' +
+        '<div class="table-wrap"><table><thead><tr>' +
+          '<th>Operador</th><th class="num">Hoje</th><th class="num">Ontem</th><th class="num">Média/dia</th>' +
+          '<th class="num">Meta</th><th class="num">% meta hoje</th><th class="num">Erros</th><th>Status</th>' +
+        '</tr></thead><tbody>' +
+        opStats.map((o,i)=>{
+          const pctMeta = o.meta? o.pedidosHoje/o.meta : null;
+          const acima = o.meta ? o.pedidosHoje>=o.meta : null;
+          return '<tr class="rank-'+(i+1)+'"><td>'+esc(o.operador)+'</td><td class="num">'+o.pedidosHoje+'</td><td class="num">'+o.pedidosOntem+'</td>' +
+            '<td class="num">'+fmt1(o.media)+'</td><td class="num">'+(o.meta||"—")+'</td>' +
+            '<td class="num">'+(pctMeta!=null? fmtPct(pctMeta):"—")+'</td>' +
+            '<td class="num">'+o.erros+'</td>' +
+            '<td>'+(acima==null? '<span class="pill neutral">Sem meta</span>' : acima? '<span class="pill good">✓ Acima da meta</span>' : '<span class="pill critical">✕ Abaixo da meta</span>')+'</td>' +
+          '</tr>';
+        }).join("") +
+        '</tbody></table></div>' +
+        (opStats.length===0? '<div class="empty">Cadastre operadores e lance dados para ver o ranking.</div>' : '') +
+      '</div>' +
+
+      '<div class="grid two-col" style="margin-top:16px;">' +
+        '<div class="card chart-card"><h3 class="chart-title">Ranking — média diária</h3><p class="chart-sub">Pedidos separados por dia, em média, no período</p><div id="chartRanking"></div></div>' +
+        '<div class="card chart-card"><h3 class="chart-title">Comparativo entre dias</h3><p class="chart-sub">Total de pedidos separados pela equipe, por dia</p><div id="chartLine"></div></div>' +
+      '</div>' +
+      '<div class="card chart-card" style="margin-top:16px;"><h3 class="chart-title">Curva de produtividade por hora</h3><p class="chart-sub">Média de pedidos separados por faixa horária (todos os operadores)</p><div id="chartHourly"></div></div>' +
+
+      '<div class="section-title">Qualidade, logística e devoluções</div>' +
+      '<div class="grid two-col">' +
+        '<div class="card chart-card"><h3 class="chart-title">Erros de separação por tipo</h3><p class="chart-sub">'+state.erros.filter(e=>e.data>=rangeCutoffDay()).length+' erros no período</p><div id="chartErros"></div></div>' +
+        '<div class="card chart-card"><h3 class="chart-title">Entregas por status</h3><p class="chart-sub">'+state.entregas.filter(e=>e.data>=rangeCutoffDay()).length+' entregas registradas no período</p><div id="chartEntregas"></div></div>' +
+      '</div>' +
+      '<div class="card chart-card" style="margin-top:16px;"><h3 class="chart-title">Devoluções por motivo</h3><p class="chart-sub">'+state.devolucoes.filter(d=>d.data>=rangeCutoffDay()).length+' devoluções no período</p><div id="chartDev"></div></div>' +
+
+      '<div class="section-title">Pós-venda / reputação nos marketplaces</div>' +
+      '<div class="tiles">' +
+        tile("Chamados recebidos", s.sacAbertos, "") +
+        tile("Atendimentos resolvidos", resolvidos.length, "") +
+        tile("Tempo médio 1ª resposta", tempoResp!=null? fmt1(tempoResp)+"h":"—", "") +
+        tile("Tempo médio de resolução", tempoRes!=null? fmt1(tempoRes)+"h":"—", "") +
+        tile("Reclamações", reclamacoes, "") +
+        tile("Pós-venda negativo", fmtPct(pctNeg), "das avaliações concluídas") +
+      '</div>' +
+      '<div class="card" style="margin-top:16px;"><h3 class="chart-title">Por marketplace</h3>' +
+        '<div class="table-wrap"><table><thead><tr><th>Marketplace</th><th class="num">Chamados</th><th class="num">% positivo</th><th class="num">% negativo</th><th class="num">Tempo médio resolução</th></tr></thead><tbody>' +
+        (sacMk.length? sacMk.map(m=>'<tr><td>'+esc(m.marketplace)+'</td><td class="num">'+m.chamados+'</td>' +
+          '<td class="num">'+(m.pctPos!=null? fmtPct(m.pctPos):"—")+'</td><td class="num">'+(m.pctNeg!=null? fmtPct(m.pctNeg):"—")+'</td>' +
+          '<td class="num">'+(m.tempoMedio!=null? fmt1(m.tempoMedio)+"h":"—")+'</td></tr>').join("") :
+          '<tr><td colspan="5"><div class="empty">Sem chamados no período.</div></td></tr>') +
+        '</tbody></table></div>' +
+      '</div>';
+
+    root.querySelector("#rangeSwitch").addEventListener("click", e=>{
+      const b=e.target.closest("button[data-r]"); if(!b) return;
+      state.range = b.dataset.r; renderDashboard();
+    });
+
+    hbar(byId("chartRanking"), opStats.map(o=>({label:o.operador, value: Math.round(o.media*10)/10, meta:o.meta})), {
+      colorFn: o => !o.meta ? "var(--text-muted)" : (o.value>=o.meta? "var(--good)" : "var(--critical)"),
+    });
+    lineChart(byId("chartLine"), series);
+    vbarHours(byId("chartHourly"), hourly.data);
+    hbar(byId("chartErros"), errosBd, {colorFn:()=>"var(--accent)"});
+    hbar(byId("chartEntregas"), entregasBd, {colorFn: it => statusColorVar(it.label)});
+    hbar(byId("chartDev"), devBd, {colorFn:()=>"var(--accent)"});
+  }
+
+  function tile(label, value, sub){
+    return '<div class="tile"><div class="label">'+esc(label)+'</div><div class="value">'+value+(sub?' <small>'+esc(sub)+'</small>':'')+'</div></div>';
+  }
+
+  /* ============================== start ============================== */
+  boot();
+})();
+</script>
